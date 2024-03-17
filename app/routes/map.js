@@ -2,6 +2,7 @@ import Route from '@ember/routing/route';
 import boundsToPolygon from 'frontend-geosparql/utils/bounds-to-polygon';
 import rdflib from 'rdflib';
 import { inject as service } from '@ember/service';
+import sparqlJsonToQuads from 'frontend-geosparql/utils/sparql-json-to-quads';
 
 export default class MapRoute extends Route {
   @service store;
@@ -16,16 +17,15 @@ export default class MapRoute extends Route {
       console.log('Got Bounds!', controller.bounds);
       const polygon = boundsToPolygon(controller.bounds);
 
-      const turtle = await this.queryContainingFeatures(polygon);
+      const quads = await this.queryContainingFeatures(polygon);
       const graph = rdflib.graph();
-      const defaultGraph = rdflib.sym('http://default');
-      rdflib.parse(turtle, graph, defaultGraph.value, 'text/turtle');
+      graph.addAll(quads);
 
       this.store.store.graph = graph;
 
       return this.store.all('charger');
     } else {
-      console.log('No bounds yet!')
+      console.log('No bounds yet!');
     }
   }
 
@@ -63,9 +63,15 @@ export default class MapRoute extends Route {
         }
     }`;
 
-    const endpoint = `http://localhost:8890/sparql?query=${encodeURIComponent(query)}`;
-    const response = await fetch(endpoint, { headers: { 'Accept': 'text/turtle'} } );
-    return response.text();
+    const endpoint = `/sparql?query=${encodeURIComponent(query)}`;
+    const response = await fetch(endpoint, {
+      headers: { 'Accept': 'application/json' }
+      // Turtle is not an option.
+      // For now mu-auth returns sparql result application/json no matter what
+    });
+    const sparqlJson = await response.json();
+    const quads = sparqlJsonToQuads(sparqlJson);
+    return quads;
   }
 
   async setupController(controller, model) {
