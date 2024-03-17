@@ -12,9 +12,16 @@
         <marker.popup>
         <div>
           <h3>{{m.identifier}}</h3>
-          {{m.address}}
-          {{m.chargerQuantity}}
-          {{m.power}}
+          <dl>
+            <dt>Address</dt>
+            <dd>{{m.address}}</dd>
+
+            <dt>Amount of chargers available</dt>
+            <dd>{{m.chargerQuantity}}</dd>
+
+            <dt>Power</dt>
+            <dd>{{m.power}}kW</dd>
+          </dl>
         </div>
         </marker.popup>
       </layers.marker>
