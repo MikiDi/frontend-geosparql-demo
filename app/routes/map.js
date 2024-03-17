@@ -33,6 +33,11 @@ export default class MapRoute extends Route {
    * @argument envelope: WKT string
    */
   async queryContainingFeatures(envelope, center) {
+    /*
+     * Comments for below query:
+     * - bif:st_transform, this function has the same functionality as geof:transform, but Virtuoso doesn't support it yet
+     * - the cast to string of wgs84Wkt. This is because Virtuoso serializes invalid json for a wktString datatype string
+     */
     const query = `
     PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
     PREFIX geo: <http://www.opengis.net/ont/geosparql#>
@@ -42,20 +47,21 @@ export default class MapRoute extends Route {
     CONSTRUCT {
         ?feature ?fp ?fo .
         ?geometry ?gp ?go .
-        ?geometry geo:asWKT ?wgs84Wkt .
+        ?geometry geo:asWKT ?wgs84WktString .
     }
     WHERE {
         ?feature ?fp ?fo .
         ?geometry ?gp ?go .
         FILTER (?gp != geo:asWKT)
         {
-            SELECT ?geometry ?feature ?wgs84Wkt
+            SELECT ?geometry ?feature ?wgs84Wkt ?wgs84WktString
             WHERE {
                 ?feature a mobivoc:Charger ;
                     geo:hasGeometry ?geometry .
                 ?geometry a geo:Geometry ;
                     geo:asWKT ?origCrsWkt .
                 BIND(bif:st_transform (?origCrsWkt, 4326) AS ?wgs84Wkt)
+                BIND(STR(?wgs84Wkt) as ?wgs84WktString)
                 BIND("${envelope}"^^geo:wktLiteral AS ?envelope)
                 FILTER(geof:sfContains(?envelope, ?wgs84Wkt))
             }
