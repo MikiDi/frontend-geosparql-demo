@@ -5,7 +5,10 @@
   @onMoveend={{this.updateCenter}}
   @onLoad={{this.primeBounds}}
   as |layers|>
-  <layers.tile @url="http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
+  <layers.tile
+    @url="http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+    @attribution="OpenStreetMap contributors © CartoDB"
+  />
   {{#each this.model as |m|}}
     {{#if m.geometry}}
       <layers.marker @lat={{m.geometry.js.y}} @lng={{m.geometry.js.x}} @draggable={{false}} as |marker|>
